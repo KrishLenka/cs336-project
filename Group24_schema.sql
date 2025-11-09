@@ -1,9 +1,7 @@
 -- Group 24: Krish Lenka, Matsvei Liapich, Sonia Kanchi
 
-
---DROP DATABASE IF EXISTS dbproject;
---CREATE DATABASE dbproject;
---USE dbproject;
+CREATE DATABASE IF NOT EXISTS cs336project;
+USE cs336project;
 
 -- Admin and Customer Rep tables
 CREATE TABLE Staff(
@@ -50,14 +48,6 @@ CREATE TABLE Create_account_for(
 			ON UPDATE CASCADE
 );
 
--- Ticket table
-CREATE TABLE Ticket(
-	ticket_id int PRIMARY KEY NOT NULL,
-	text text NOT NULL,
-	created_date datetime NOT NULL,
-	is_closed boolean NOT NULL
-);
-
 -- User table
 CREATE TABLE User(
 	user_id varchar(15) PRIMARY KEY NOT NULL,
@@ -69,6 +59,8 @@ CREATE TABLE User(
 	dob date NOT NULL,
 	date_created date NOT NULL
 );
+insert into User
+values("test","password","test@email.com","1234567890","test","account","2025-11-08","2025-11-08");
 
 -- Buyer table
 CREATE TABLE Buyer(
@@ -92,25 +84,29 @@ CREATE TABLE Seller(
 			ON UPDATE CASCADE
 );
 
--- Bid table
-CREATE TABLE Bid(
-	bid_ID int NOT NULL,
-	buyer_ID varchar(15) NOT NULL,
-	auction_ID int NOT NULL,
-	bid_amount float NOT NULL,
-	bid_time datetime NOT NULL,
-	is_autobid boolean NOT NULL,
-	max_bid float, -- Made this nullable because max bid is only used for autobids
-	PRIMARY KEY(bid_ID, auction_ID),
-	FOREIGN KEY(buyer_ID) 
-		REFERENCES Buyer(buyer_ID)
-			ON DELETE CASCADE 
-			ON UPDATE CASCADE,
-	FOREIGN KEY(auction_ID) 
-		REFERENCES Auction(auction_ID)
-			ON DELETE CASCADE 
-			ON UPDATE CASCADE,
+-- Category table
+CREATE TABLE Category(
+	category_id int PRIMARY KEY NOT NULL,
+	category_description text NOT NULL,
+	category_title varchar(100) NOT NULL,
+	parent_id int -- self reference can be null
 );
+
+
+-- Item table
+CREATE TABLE Item(
+	item_id int PRIMARY KEY NOT NULL,
+	item_title varchar(100) NOT NULL,
+	item_description text NOT NULL,
+	item_condition text NOT NULL,
+	image_url text NOT NULL,
+	category_id int NOT NULL,
+	FOREIGN KEY(category_id) 
+		REFERENCES Category(category_ID)
+			ON DELETE CASCADE 
+			ON UPDATE CASCADE
+);
+
 
 -- Auction table
 CREATE TABLE Auction(
@@ -128,26 +124,24 @@ CREATE TABLE Auction(
 			ON UPDATE CASCADE
 );
 
--- Item table
-CREATE TABLE Item(
-	item_id int PRIMARY KEY NOT NULL,
-	item_title varchar(100) NOT NULL,
-	item_description text NOT NULL,
-	item_condition text NOT NULL,
-	image_url text NOT NULL,
-	category_id int NOT NULL,
-	FOREIGN KEY(category_id) 
-		REFERENCES Category(category_ID)
+-- Bid table
+CREATE TABLE Bid(
+	bid_ID int NOT NULL,
+	buyer_ID varchar(15) NOT NULL,
+	auction_ID int NOT NULL,
+	bid_amount float NOT NULL,
+	bid_time datetime NOT NULL,
+	is_autobid boolean NOT NULL,
+	max_bid float, -- Made this nullable because max bid is only used for autobids
+	PRIMARY KEY(bid_ID, auction_ID),
+	FOREIGN KEY(buyer_ID) 
+		REFERENCES Buyer(buyer_ID)
+			ON DELETE CASCADE 
+			ON UPDATE CASCADE,
+	FOREIGN KEY(auction_ID) 
+		REFERENCES Auction(auction_ID)
 			ON DELETE CASCADE 
 			ON UPDATE CASCADE
-);
-
--- Category table
-CREATE TABLE Category(
-	category_id int PRIMARY KEY NOT NULL,
-	category_description text NOT NULL,
-	category_title varchar(100) NOT NULL,
-	parent_id int, -- self reference can be null
 );
 
 -- Alert table
@@ -155,7 +149,7 @@ CREATE TABLE Alert(
 	alert_id int PRIMARY KEY NOT NULL,
 	category_id int NOT NULL,
 	buyer_id varchar(15) NOT NULL,
-	--created_id?
+	-- created_id?
 	is_active boolean NOT NULL,
 	FOREIGN KEY(category_id) 
 		REFERENCES Category(category_ID)
@@ -165,6 +159,14 @@ CREATE TABLE Alert(
 		REFERENCES Buyer(buyer_ID)
 			ON DELETE CASCADE 
 			ON UPDATE CASCADE
+);
+
+-- Ticket table
+CREATE TABLE Ticket(
+	ticket_id int PRIMARY KEY NOT NULL,
+	text text NOT NULL,
+	created_date datetime NOT NULL,
+	is_closed boolean NOT NULL
 );
 
 -- Sales table, this covers the part of the assignment about admins being able to generate summary sales reports
@@ -199,5 +201,5 @@ CREATE TABLE Sales(
 	FOREIGN KEY(admin_id) 
 		REFERENCES Admin(emp_ID)
 			ON DELETE CASCADE 
-			ON UPDATE CASCADE,
+			ON UPDATE CASCADE
 );
