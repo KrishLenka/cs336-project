@@ -42,8 +42,10 @@
                             &#128100; <%= session.getAttribute("userName") != null ? session.getAttribute("userName") : session.getAttribute("user") %>
                         </span>
                         <% if (session.getAttribute("userType") != null && session.getAttribute("userType").equals("user")) { %>
-                            <a href="notifications.jsp" class="btn btn-sm btn-secondary">&#128276;</a>
-                            <a href="alerts.jsp" class="btn btn-sm btn-secondary">&#9881;</a>
+                            <a href="notifications.jsp" class="btn btn-sm btn-secondary" title="Notifications">&#128276;</a>
+                            <a href="alerts.jsp" class="btn btn-sm btn-secondary" title="Alerts">&#9881;</a>
+                            <a href="profile.jsp" class="btn btn-sm btn-secondary" title="Profile">&#128100;</a>
+                            <a href="askQuestion.jsp" class="btn btn-sm btn-secondary" title="Help">&#10067;</a>
                         <% } %>
                         <a href="logout.jsp" class="btn btn-sm btn-secondary">Logout</a>
                     <% } else { %>

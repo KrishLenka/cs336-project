@@ -136,6 +136,10 @@ request.setAttribute("pageTitle", "Admin Dashboard");
                     <a href="reports.jsp?type=bestselling" class="btn btn-secondary">Best-Selling Items</a>
                     <a href="reports.jsp?type=bestbuyers" class="btn btn-secondary">Best Buyers</a>
                 </div>
+                
+                <h4 class="mt-4">System Actions</h4>
+                <a href="../closeAuctions.jsp" class="btn btn-primary">Process Ended Auctions</a>
+                <p class="form-hint">Closes ended auctions, determines winners, and creates sales records</p>
             </div>
         </div>
         
