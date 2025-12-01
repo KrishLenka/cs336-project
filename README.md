@@ -75,7 +75,12 @@ BuyMe is an online auction platform specializing in **Electronics** with the fol
 1. Install Apache Tomcat 9.x
 2. Copy the `webapp` folder to Tomcat's `webapps` directory
 3. Rename to desired context name (e.g., `buyme`)
-4. Compile the Java files or use the included .class files
+4. Compile the Java file:
+   ```bash
+   cd webapp/WEB-INF/classes
+   javac -cp "../lib/*" db/ApplicationDB.java
+   ```
+   Or use the included pre-compiled .class file
 
 ### 3. Running the Application
 1. Start MySQL server
