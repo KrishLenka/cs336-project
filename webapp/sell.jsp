@@ -55,6 +55,8 @@ request.setAttribute("pageTitle", "Sell Item");
         <div class="alert alert-error">
             <% if ("invalid".equals(error)) { %>
                 Please fill in all required fields correctly.
+            <% } else if ("pastDate".equals(error)) { %>
+                Please choose an auction closing date and time in the future.
             <% } else { %>
                 An error occurred. Please try again.
             <% } %>
@@ -250,15 +252,9 @@ request.setAttribute("pageTitle", "Sell Item");
                     <span class="form-hint">Secret minimum - item won't sell below this</span>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="duration">Auction Duration *</label>
-                    <select id="duration" name="duration" class="form-select" required>
-                        <option value="1">1 Day</option>
-                        <option value="3">3 Days</option>
-                        <option value="5">5 Days</option>
-                        <option value="7" selected>7 Days</option>
-                        <option value="10">10 Days</option>
-                        <option value="14">14 Days</option>
-                    </select>
+                    <label class="form-label" for="closeDate">Auction Closing Date &amp; Time *</label>
+                    <input type="datetime-local" id="closeDate" name="closeDate" class="form-input" required>
+                    <span class="form-hint">Choose when this auction should end</span>
                 </div>
             </div>
             
@@ -269,6 +265,30 @@ request.setAttribute("pageTitle", "Sell Item");
         </form>
     </div>
 </div>
+
+<script>
+(function () {
+    const input = document.getElementById('closeDate');
+    if (!input) return;
+
+    const now = new Date();
+    // e.g., 10 minutes from now
+    now.setMinutes(now.getMinutes() + 10);
+    now.setSeconds(0, 0);
+
+    function pad(n) { return n.toString().padStart(2, '0'); }
+
+    const value =
+        now.getFullYear() + '-' +
+        pad(now.getMonth() + 1) + '-' +
+        pad(now.getDate()) + 'T' +
+        pad(now.getHours()) + ':' +
+        pad(now.getMinutes());
+
+    input.min = value;
+    input.value = value;
+})();
+</script>
 
 <%@ include file="includes/footer.jsp" %>
 

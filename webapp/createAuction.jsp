@@ -21,7 +21,7 @@ String yearMadeParam = request.getParameter("yearMade");
 String initialPriceParam = request.getParameter("initialPrice");
 String incrementParam = request.getParameter("increment");
 String minPriceParam = request.getParameter("minPrice");
-String durationParam = request.getParameter("duration");
+String closeDateParam = request.getParameter("closeDate");
 
 // Category-specific fields
 String processor = request.getParameter("processor");
@@ -36,13 +36,14 @@ String batteryLifeParam = request.getParameter("batteryLife");
 String platform = request.getParameter("platform");
 String region = request.getParameter("region");
 
-// Validate required fields
+
 if (title == null || description == null || categoryIdParam == null || condition == null ||
-    initialPriceParam == null || incrementParam == null || minPriceParam == null || durationParam == null ||
-    title.trim().isEmpty() || description.trim().isEmpty()) {
+    initialPriceParam == null || incrementParam == null || minPriceParam == null || closeDateParam == null ||
+    title.trim().isEmpty() || description.trim().isEmpty() || closeDateParam.trim().isEmpty()) {
     response.sendRedirect("sell.jsp?error=invalid");
     return;
 }
+
 
 // Parse numeric values
 int categoryId = 0;
@@ -50,28 +51,39 @@ int yearMade = 0;
 double initialPrice = 0;
 double increment = 0;
 double minPrice = 0;
-int duration = 7;
 int ram = 0;
 int storage = 0;
 double screenSize = 0;
 int batteryLife = 0;
+Timestamp closeDate = null;
 
 try {
     categoryId = Integer.parseInt(categoryIdParam);
     initialPrice = Double.parseDouble(initialPriceParam);
     increment = Double.parseDouble(incrementParam);
     minPrice = Double.parseDouble(minPriceParam);
-    duration = Integer.parseInt(durationParam);
-    
+
     if (yearMadeParam != null && !yearMadeParam.isEmpty()) yearMade = Integer.parseInt(yearMadeParam);
     if (ramParam != null && !ramParam.isEmpty()) ram = Integer.parseInt(ramParam);
     if (storageParam != null && !storageParam.isEmpty()) storage = Integer.parseInt(storageParam);
     if (screenSizeParam != null && !screenSizeParam.isEmpty()) screenSize = Double.parseDouble(screenSizeParam);
     if (batteryLifeParam != null && !batteryLifeParam.isEmpty()) batteryLife = Integer.parseInt(batteryLifeParam);
-} catch (NumberFormatException e) {
+
+    // HTML datetime-local sends: yyyy-MM-ddTHH:mm
+    String closeDateStr = closeDateParam.replace("T", " ") + ":00"; // -> yyyy-MM-dd HH:mm:ss
+    closeDate = Timestamp.valueOf(closeDateStr);
+
+    // optional: require future date/time
+    if (closeDate.before(new Timestamp(System.currentTimeMillis()))) {
+        response.sendRedirect("sell.jsp?error=pastDate");
+        return;
+    }
+
+} catch (NumberFormatException | IllegalArgumentException e) {
     response.sendRedirect("sell.jsp?error=invalid");
     return;
 }
+
 
 ApplicationDB db = new ApplicationDB();
 Connection con = null;
@@ -124,9 +136,7 @@ try {
     }
     int itemId = keys.getInt(1);
     
-    // Calculate close date
-    Timestamp closeDate = new Timestamp(System.currentTimeMillis() + (duration * 24L * 60 * 60 * 1000));
-    
+   
     // Insert auction
     PreparedStatement auctionPs = con.prepareStatement(
         "INSERT INTO Auction (item_id, seller_id, close_date, initial_price, increment_price, min_price) " +
