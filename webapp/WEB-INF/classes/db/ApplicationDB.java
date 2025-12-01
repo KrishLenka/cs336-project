@@ -4,48 +4,81 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * BuyMe Auction System - Database Connection Handler
+ * Provides connection management for MySQL database access.
+ * 
+ * @author Group 24 - CS 336 Fall 2025
+ */
 public class ApplicationDB {
-	public ApplicationDB(){
-	}
-
-	public Connection getConnection() {
-		String connectionURL="jdbc:mysql://localhost:3306/cs336project";
-		Connection connection = null;
-		try{
-			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-		} catch (InstantiationException var5) {
-			var5.printStackTrace();
-		 } catch (IllegalAccessException var6) {
-			var6.printStackTrace();
-		 } catch (ClassNotFoundException var7) {
-			var7.printStackTrace();
-		 }
-
-		 try{
-			connection = DriverManager.getConnection(connectionURL,"root","password");
-		 } catch(SQLException var4){
-			var4.printStackTrace();
-		 }
-		 return connection;
-	}
-	public void closeConnection(Connection connection){
-		try{
-			connection.close();
-		} catch(SQLException var3){
-			var3.printStackTrace();
-		}
-	}
-	/**
-	 * Like the only method I understand.
-	 * Create a temporary connection each time someone accesses the website.
-	 * THis is because HTTP is stateless so we create a new connection between client and db.
-	 * Then close the connection when the session is done.
-	 */
-	public static void main(String[] args){
-		ApplicationDB appDB = new ApplicationDB();
-		Connection connection = appDB.getConnection();
-		System.out.println(connection);
-		appDB.closeConnection(connection);
-	}
-	
+    
+    // Database configuration - update these for your environment
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/cs336project";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "password";
+    
+    public ApplicationDB() {
+        // Default constructor
+    }
+    
+    /**
+     * Creates and returns a new database connection.
+     * Each request should get its own connection since HTTP is stateless.
+     * 
+     * @return Connection object to the MySQL database
+     */
+    public Connection getConnection() {
+        Connection connection = null;
+        
+        try {
+            // Load MySQL JDBC driver
+            Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            System.err.println("Error loading MySQL driver: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        try {
+            // Create connection with configured credentials
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        } catch (SQLException e) {
+            System.err.println("Error connecting to database: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return connection;
+    }
+    
+    /**
+     * Safely closes a database connection.
+     * Should be called in a finally block after database operations.
+     * 
+     * @param connection The connection to close
+     */
+    public void closeConnection(Connection connection) {
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                System.err.println("Error closing connection: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    /**
+     * Test method to verify database connectivity.
+     */
+    public static void main(String[] args) {
+        ApplicationDB appDB = new ApplicationDB();
+        Connection connection = appDB.getConnection();
+        
+        if (connection != null) {
+            System.out.println("Database connection successful!");
+            System.out.println("Connection: " + connection);
+            appDB.closeConnection(connection);
+        } else {
+            System.out.println("Failed to connect to database.");
+        }
+    }
 }
