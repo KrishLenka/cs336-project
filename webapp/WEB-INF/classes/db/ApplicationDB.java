@@ -31,8 +31,8 @@ public class ApplicationDB {
         Connection connection = null;
         
         try {
-            // Load MySQL JDBC driver
-            Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+            // Load MySQL JDBC driver (5.1.x uses com.mysql.jdbc.Driver)
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             System.err.println("Error loading MySQL driver: " + e.getMessage());
             e.printStackTrace();
