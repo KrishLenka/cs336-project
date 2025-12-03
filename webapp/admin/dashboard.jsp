@@ -128,13 +128,13 @@ request.setAttribute("pageTitle", "Admin Dashboard");
                     <h3 class="card-title">Sales Reports</h3>
                 </div>
                 
-                <div class="flex flex-column gap-2">
-                    <a href="reports.jsp?type=total" class="btn btn-secondary">Total Earnings Report</a>
-                    <a href="reports.jsp?type=item" class="btn btn-secondary">Earnings by Item</a>
-                    <a href="reports.jsp?type=itemtype" class="btn btn-secondary">Earnings by Item Type</a>
-                    <a href="reports.jsp?type=user" class="btn btn-secondary">Earnings by End-User</a>
-                    <a href="reports.jsp?type=bestselling" class="btn btn-secondary">Best-Selling Items</a>
-                    <a href="reports.jsp?type=bestbuyers" class="btn btn-secondary">Best Buyers</a>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
+                    <a href="reports.jsp?type=total" class="btn btn-secondary btn-sm">Total Earnings</a>
+                    <a href="reports.jsp?type=item" class="btn btn-secondary btn-sm">By Item</a>
+                    <a href="reports.jsp?type=itemtype" class="btn btn-secondary btn-sm">By Item Type</a>
+                    <a href="reports.jsp?type=user" class="btn btn-secondary btn-sm">By End-User</a>
+                    <a href="reports.jsp?type=bestselling" class="btn btn-secondary btn-sm">Best-Selling</a>
+                    <a href="reports.jsp?type=bestbuyers" class="btn btn-secondary btn-sm">Best Buyers</a>
                 </div>
                 
                 <h4 class="mt-4">System Actions</h4>
