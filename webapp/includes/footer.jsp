@@ -1,6 +1,7 @@
 <%-- 
     BuyMe Auction System - Footer Component
 --%>
+<% String ctxFooter = request.getContextPath(); %>
     </main>
     
     <footer class="footer">
@@ -12,7 +13,7 @@
         </div>
     </footer>
     
-    <script src="js/main.js"></script>
+    <script src="<%= ctxFooter %>/js/main.js"></script>
 </body>
 </html>
 

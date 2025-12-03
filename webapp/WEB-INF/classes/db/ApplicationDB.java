@@ -15,7 +15,7 @@ public class ApplicationDB {
     // Database configuration - update these for your environment
     private static final String DB_URL = "jdbc:mysql://localhost:3306/cs336project";
     private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "Hello123";
+    private static final String DB_PASSWORD = "password";
     
     public ApplicationDB() {
         // Default constructor
