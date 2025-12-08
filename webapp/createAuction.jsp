@@ -79,7 +79,7 @@ try {
         return;
     }
 
-} catch (NumberFormatException | IllegalArgumentException e) {
+} catch (IllegalArgumentException e) {
     response.sendRedirect("sell.jsp?error=invalid");
     return;
 }
