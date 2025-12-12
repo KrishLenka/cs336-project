@@ -101,6 +101,112 @@ String currentUser = (String) session.getAttribute("user");
             // Check if auction has ended
             boolean hasEnded = closeDate.before(new Timestamp(System.currentTimeMillis())) || isClosed || !isActive;
             
+            // Auto-process this auction if it has ended but hasn't been processed yet
+            if (hasEnded && !isClosed && isActive) {
+                // Process this specific auction
+                if (highBidderId != null && currentBid >= minPrice) {
+                    // Winner! Create sale and update auction
+                    PreparedStatement salePs = con.prepareStatement(
+                        "INSERT INTO Sale (auction_id, item_id, buyer_id, seller_id, final_price, shipping_address, payment_card) " +
+                        "SELECT ?, a.item_id, ?, a.seller_id, ?, COALESCE(b.shipping_address, ''), COALESCE(b.default_card, '') " +
+                        "FROM Auction a LEFT JOIN Buyer b ON b.buyer_id = ? WHERE a.auction_id = ?");
+                    salePs.setInt(1, auctionId);
+                    salePs.setString(2, highBidderId);
+                    salePs.setDouble(3, currentBid);
+                    salePs.setString(4, highBidderId);
+                    salePs.setInt(5, auctionId);
+                    salePs.executeUpdate();
+                    
+                    PreparedStatement updatePs = con.prepareStatement(
+                        "UPDATE Auction SET is_closed = TRUE, winner_id = ?, final_price = ? WHERE auction_id = ?");
+                    updatePs.setString(1, highBidderId);
+                    updatePs.setDouble(2, currentBid);
+                    updatePs.setInt(3, auctionId);
+                    updatePs.executeUpdate();
+                    
+                    // Update seller earnings
+                    PreparedStatement earningsPs = con.prepareStatement(
+                        "UPDATE Seller SET earnings = earnings + ? WHERE seller_id = ?");
+                    earningsPs.setDouble(1, currentBid);
+                    earningsPs.setString(2, sellerId);
+                    earningsPs.executeUpdate();
+                    
+                    // Notify winner
+                    PreparedStatement notifyWinnerPs = con.prepareStatement(
+                        "INSERT INTO Notification (user_id, message, auction_id) VALUES (?, ?, ?)");
+                    notifyWinnerPs.setString(1, highBidderId);
+                    notifyWinnerPs.setString(2, "Congratulations! You won auction #" + auctionId + " for $" + String.format("%.2f", currentBid));
+                    notifyWinnerPs.setInt(3, auctionId);
+                    notifyWinnerPs.executeUpdate();
+                    
+                    // Notify seller
+                    PreparedStatement notifySellerPs = con.prepareStatement(
+                        "INSERT INTO Notification (user_id, message, auction_id) VALUES (?, ?, ?)");
+                    notifySellerPs.setString(1, sellerId);
+                    notifySellerPs.setString(2, "Your auction #" + auctionId + " sold for $" + String.format("%.2f", currentBid));
+                    notifySellerPs.setInt(3, auctionId);
+                    notifySellerPs.executeUpdate();
+                    
+                    // Notify losing bidders
+                    PreparedStatement losingBiddersPs = con.prepareStatement(
+                        "SELECT DISTINCT buyer_id FROM Bid WHERE auction_id = ? AND buyer_id != ?");
+                    losingBiddersPs.setInt(1, auctionId);
+                    losingBiddersPs.setString(2, highBidderId);
+                    ResultSet loserRs = losingBiddersPs.executeQuery();
+                    while (loserRs.next()) {
+                        PreparedStatement notifyLoserPs = con.prepareStatement(
+                            "INSERT INTO Notification (user_id, message, auction_id) VALUES (?, ?, ?)");
+                        notifyLoserPs.setString(1, loserRs.getString("buyer_id"));
+                        notifyLoserPs.setString(2, "Auction #" + auctionId + " has ended. Unfortunately, you were outbid. Final price: $" + String.format("%.2f", currentBid));
+                        notifyLoserPs.setInt(3, auctionId);
+                        notifyLoserPs.executeUpdate();
+                    }
+                    
+                    // Refresh the data
+                    isClosed = true;
+                    rs.close();
+                    ps.setInt(1, auctionId);
+                    rs = ps.executeQuery();
+                    rs.next();
+                } else {
+                    // No winner - just close the auction
+                    PreparedStatement closePs = con.prepareStatement(
+                        "UPDATE Auction SET is_closed = TRUE WHERE auction_id = ?");
+                    closePs.setInt(1, auctionId);
+                    closePs.executeUpdate();
+                    
+                    // Notify seller
+                    PreparedStatement notifySellerPs = con.prepareStatement(
+                        "INSERT INTO Notification (user_id, message, auction_id) VALUES (?, ?, ?)");
+                    notifySellerPs.setString(1, sellerId);
+                    if (highBidderId == null) {
+                        notifySellerPs.setString(2, "Your auction #" + auctionId + " ended with no bids.");
+                    } else {
+                        notifySellerPs.setString(2, "Your auction #" + auctionId + " ended but the reserve price was not met.");
+                    }
+                    notifySellerPs.setInt(3, auctionId);
+                    notifySellerPs.executeUpdate();
+                    
+                    // Notify all bidders that reserve wasn't met
+                    if (highBidderId != null) {
+                        PreparedStatement allBiddersPs = con.prepareStatement(
+                            "SELECT DISTINCT buyer_id FROM Bid WHERE auction_id = ?");
+                        allBiddersPs.setInt(1, auctionId);
+                        ResultSet bidderRs = allBiddersPs.executeQuery();
+                        while (bidderRs.next()) {
+                            PreparedStatement notifyBidderPs = con.prepareStatement(
+                                "INSERT INTO Notification (user_id, message, auction_id) VALUES (?, ?, ?)");
+                            notifyBidderPs.setString(1, bidderRs.getString("buyer_id"));
+                            notifyBidderPs.setString(2, "Auction #" + auctionId + " ended but the reserve price was not met.");
+                            notifyBidderPs.setInt(3, auctionId);
+                            notifyBidderPs.executeUpdate();
+                        }
+                    }
+                    
+                    isClosed = true;
+                }
+            }
+            
             request.setAttribute("pageTitle", title);
     %>
     

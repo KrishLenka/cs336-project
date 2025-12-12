@@ -20,10 +20,9 @@ try {
     
     // Find all auctions that have ended but not been processed
     PreparedStatement findPs = con.prepareStatement(
-        "SELECT a.*, i.item_id, b.shipping_address, b.default_card " +
+        "SELECT a.*, b.shipping_address, b.default_card " +
         "FROM Auction a " +
         "LEFT JOIN Buyer b ON a.high_bidder_id = b.buyer_id " +
-        "JOIN Item i ON a.item_id = i.item_id " +
         "WHERE a.is_active = TRUE AND a.is_closed = FALSE AND a.close_date <= NOW()");
     ResultSet rs = findPs.executeQuery();
     
@@ -85,6 +84,21 @@ try {
             notifySellerPs.setInt(3, auctionId);
             notifySellerPs.executeUpdate();
             
+            // Notify losing bidders
+            PreparedStatement losingBiddersPs = con.prepareStatement(
+                "SELECT DISTINCT buyer_id FROM Bid WHERE auction_id = ? AND buyer_id != ?");
+            losingBiddersPs.setInt(1, auctionId);
+            losingBiddersPs.setString(2, highBidderId);
+            ResultSet loserRs = losingBiddersPs.executeQuery();
+            while (loserRs.next()) {
+                PreparedStatement notifyLoserPs = con.prepareStatement(
+                    "INSERT INTO Notification (user_id, message, auction_id) VALUES (?, ?, ?)");
+                notifyLoserPs.setString(1, loserRs.getString("buyer_id"));
+                notifyLoserPs.setString(2, "Auction #" + auctionId + " has ended. Unfortunately, you were outbid. Final price: $" + String.format("%.2f", currentBid));
+                notifyLoserPs.setInt(3, auctionId);
+                notifyLoserPs.executeUpdate();
+            }
+            
             salesCreated++;
             
         } else {
@@ -106,14 +120,20 @@ try {
             notifyPs.setInt(3, auctionId);
             notifyPs.executeUpdate();
             
-            // If there was a high bidder who didn't meet reserve, notify them
+            // Notify all bidders that reserve wasn't met
             if (highBidderId != null) {
-                PreparedStatement notifyBidderPs = con.prepareStatement(
-                    "INSERT INTO Notification (user_id, message, auction_id) VALUES (?, ?, ?)");
-                notifyBidderPs.setString(1, highBidderId);
-                notifyBidderPs.setString(2, "Auction #" + auctionId + " ended but the reserve price was not met.");
-                notifyBidderPs.setInt(3, auctionId);
-                notifyBidderPs.executeUpdate();
+                PreparedStatement allBiddersPs = con.prepareStatement(
+                    "SELECT DISTINCT buyer_id FROM Bid WHERE auction_id = ?");
+                allBiddersPs.setInt(1, auctionId);
+                ResultSet bidderRs = allBiddersPs.executeQuery();
+                while (bidderRs.next()) {
+                    PreparedStatement notifyBidderPs = con.prepareStatement(
+                        "INSERT INTO Notification (user_id, message, auction_id) VALUES (?, ?, ?)");
+                    notifyBidderPs.setString(1, bidderRs.getString("buyer_id"));
+                    notifyBidderPs.setString(2, "Auction #" + auctionId + " ended but the reserve price was not met.");
+                    notifyBidderPs.setInt(3, auctionId);
+                    notifyBidderPs.executeUpdate();
+                }
             }
         }
     }
