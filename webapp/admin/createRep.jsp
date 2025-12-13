@@ -20,9 +20,21 @@ String error = request.getParameter("error");
     
     <% if (error != null) { %>
         <div class="alert alert-error">
-            <% if ("exists".equals(error)) { %>Employee ID already exists.<% } %>
-            <% if ("invalid".equals(error)) { %>Please fill in all fields correctly.<% } %>
-            <% else { %>An error occurred. Please try again.<% } %>
+            <%
+            if ("exists".equals(error)) {
+            %>
+                Employee ID already exists.
+            <%
+            } else if ("invalid".equals(error)) {
+            %>
+                Please fill in all fields correctly.
+            <%
+            } else {
+            %>
+                An error occurred. Please try again.
+            <%
+            }
+            %>
         </div>
     <% } %>
     
